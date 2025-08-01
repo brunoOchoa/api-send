@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8">
+  <title>WhatsApp Message Sender</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+      min-height: 100vh;
+    }
+    .card {
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+      border: none;
+      border-radius: 15px;
+    }
+    .btn-whatsapp {
+      background-color: #25D366;
+      border-color: #25D366;
+      color: white;
+    }
+    .btn-whatsapp:hover {
+      background-color: #1da851;
+      border-color: #1da851;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <!-- Container para notificações toast -->
+  <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1055;">
+  </div>
+
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-6 col-lg-5">
+        <div class="card">
+          <div class="card-header bg-success text-white text-center">
+            <h3 class="mb-0">
+              <i class="fab fa-whatsapp me-2"></i>
+              WhatsApp Message Sender
+            </h3>
+          </div>
+          <div class="card-body p-4">
+            <!-- Botão para atualizar token -->
+            <div class="d-grid mb-3">
+              <button type="button" class="btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#tokenModal">
+                <i class="fas fa-key me-2"></i>
+                Atualizar Token WABA
+              </button>
+            </div>
+
+            <form id="messageForm">
+              <div class="mb-3">
+                <label for="to-select" class="form-label">
+                  <i class="fas fa-users me-1"></i>
+                  Escolha um número cadastrado:
+                </label>
+                <select id="to-select" class="form-select">
+                  <option value="">Selecione...</option>
+                  <option value="5521985421711">+55 21 98542-1711 (BRUNO)</option>
+                  <option value="5521985193525">+55 21 98519-3525 (SUELEN)</option>
+                  <option value="5521997921747">+55 21 99792-1747 (JESSICA)</option>
+                </select>
+              </div>
+
+              <div class="mb-3">
+                <label for="to" class="form-label">
+                  <i class="fas fa-phone me-1"></i>
+                  Número (com DDI, ex: 5511999999999):
+                </label>
+                <input type="text" id="to" name="to" class="form-control" required>
+              </div>
+
+              <div class="mb-3">
+                <label for="message" class="form-label">
+                  <i class="fas fa-comment me-1"></i>
+                  Mensagem:
+                </label>
+                <textarea id="message" name="message" rows="5" class="form-control" required placeholder="Digite sua mensagem aqui..."></textarea>
+              </div>
+
+              <div class="d-grid">
+                <button type="submit" class="btn btn-whatsapp btn-lg">
+                  <i class="fab fa-whatsapp me-2"></i>
+                  Enviar Mensagem
+                </button>
+              </div>
+            </form>
+          </div>
+          <div class="card-footer text-center text-muted">
+            <small>
+              <i class="fas fa-info-circle me-1"></i>
+              Seu número deve estar cadastrado no WABA
+            </small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para atualizar token -->
+  <div class="modal fade" id="tokenModal" tabindex="-1" aria-labelledby="tokenModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="tokenModalLabel">
+            <i class="fas fa-key me-2"></i>
+            Atualizar Token WABA
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="tokenForm">
+            <div class="mb-3">
+              <label for="newToken" class="form-label">Novo Token:</label>
+              <textarea id="newToken" class="form-control" rows="4" placeholder="Cole o novo token aqui..." required></textarea>
+              <div class="form-text">Cole o token completo que você recebeu do Facebook.</div>
+            </div>
+            <div class="mb-3">
+              <label for="phoneNumberId" class="form-label">Phone Number ID (opcional):</label>
+              <input type="text" id="phoneNumberId" class="form-control" placeholder="Se mudou, cole o novo Phone Number ID">
+              <div class="form-text">Deixe em branco se não mudou.</div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-warning" onclick="updateToken()">
+            <i class="fas fa-save me-2"></i>
+            Atualizar Token
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Função para mostrar notificações toast
+    function showToast(message, type = 'success') {
+      const toastContainer = document.querySelector('.toast-container');
+
+      const toastId = 'toast-' + Date.now();
+      const iconClass = type === 'success' ? 'fa-check-circle text-success' : 'fa-exclamation-triangle text-danger';
+      const headerBg = type === 'success' ? 'bg-success' : 'bg-danger';
+
+      const toastHTML = `
+        <div class="toast" id="${toastId}" role="alert" aria-live="assertive" aria-atomic="true">
+          <div class="toast-header ${headerBg} text-white">
+            <i class="fas ${iconClass} me-2"></i>
+            <strong class="me-auto">${type === 'success' ? 'Sucesso' : 'Erro'}</strong>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+          </div>
+          <div class="toast-body">
+            ${message}
+          </div>
+        </div>
+      `;
+
+      toastContainer.insertAdjacentHTML('beforeend', toastHTML);
+
+      const toastElement = document.getElementById(toastId);
+      const toast = new bootstrap.Toast(toastElement, {
+        autohide: true,
+        delay: type === 'success' ? 3000 : 5000
+      });
+
+      toast.show();
+
+      // Remove o elemento do DOM após ser escondido
+      toastElement.addEventListener('hidden.bs.toast', () => {
+        toastElement.remove();
+      });
+    }
+
+    // Quando selecionar no select, preenche o input automaticamente
+    document.getElementById('to-select').addEventListener('change', function() {
+      document.getElementById('to').value = this.value;
+    });
+
+    // Handler do formulário de mensagem com AJAX
+    document.getElementById('messageForm').addEventListener('submit', async function(e) {
+      e.preventDefault(); // Previne o submit tradicional
+
+      const btn = this.querySelector('button[type="submit"]');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Enviando...';
+      btn.disabled = true;
+
+      try {
+        const formData = new FormData(this);
+        const response = await fetch('/responder', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            to: formData.get('to'),
+            message: formData.get('message')
+          })
+        });
+
+        if (response.ok) {
+          showToast('Mensagem enviada com sucesso!', 'success');
+          // Limpar apenas o campo de mensagem
+          document.getElementById('message').value = '';
+        } else {
+          const errorText = await response.text();
+          showToast(errorText, 'error');
+        }
+      } catch (error) {
+        showToast('Erro de conexão: ' + error.message, 'error');
+      } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    });
+
+    // Função para atualizar o token
+    async function updateToken() {
+      const newToken = document.getElementById('newToken').value.trim();
+      const phoneNumberId = document.getElementById('phoneNumberId').value.trim();
+
+      if (!newToken) {
+        showToast('Por favor, cole o novo token!', 'error');
+        return;
+      }
+
+      const btn = document.querySelector('#tokenModal .btn-warning');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Atualizando...';
+      btn.disabled = true;
+
+      try {
+        const payload = { token: newToken };
+        if (phoneNumberId) {
+          payload.phoneNumberId = phoneNumberId;
+        }
+
+        const response = await fetch('/update-token', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (response.ok) {
+          showToast('Token atualizado com sucesso!', 'success');
+          document.getElementById('newToken').value = '';
+          document.getElementById('phoneNumberId').value = '';
+
+          // Fechar modal
+          const modal = bootstrap.Modal.getInstance(document.getElementById('tokenModal'));
+          modal.hide();
+        } else {
+          const error = await response.text();
+          showToast('Erro ao atualizar token: ' + error, 'error');
+        }
+      } catch (error) {
+        showToast('Erro de conexão: ' + error.message, 'error');
+      } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>
